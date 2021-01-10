@@ -98,7 +98,7 @@ function exportString(string)
 	    {
 		//value = string.substring(jequals + 2, jafterspace - 1).replace(/\{n\}\n+/g, "{n}").replace(/\n+\{n\}/g, "{n}");
 		value = string.substring(jequals + 2, jafterspace - 1).replace(/\{n\}\n+/g, "{n}").replace(/\n+$/, "");
-		if (jequals + 2 > jafterspace - 1) // sometimes, there'll be an equation sign where there's nothing after it and that's represented by two 00 bytes and no numerical bytes
+		if (jequals + 2 > jafterspace - 1) // sometimes, there'll be an equation sign where there's nothing after it and that's represented by two 00 bytes as a result
 		    value = "";
 		kvarr.push(key);
 		kvarr.push(value);
@@ -175,18 +175,10 @@ function exportString(string)
     console.log(macroTable);
     for (var j = 0; j < kvarr.length; j += KVARR_STEP)
     {
-	if (kvarr[j + 1])
-	{
-	    i += putStringInUint(arr, kvarr[j    ], i); // key
-	    i += putStringInUint(arr, kvarr[j + 1], i); // value full
-	    var simp = kvarr[j + 1].replaceAll("{n}", "\n").replaceAll("{break}", "\n").replace(/\{.*?\}/g, ""); // squirrel in my pants
-	    i += putStringInUint(arr, simp, i); // value simple
-	}
-	else // remember that two 00 byte thing from earlier?
-	{
-	    i += putStringInUint(arr, kvarr[j    ], i);
-	    i += 2;
-	}
+	i += putStringInUint(arr, kvarr[j    ], i); // key
+	i += putStringInUint(arr, kvarr[j + 1], i); // value full
+	var simp = kvarr[j + 1].replaceAll("{n}", "\n").replaceAll("{break}", "\n").replace(/\{.*?\}/g, ""); // squirrel in my pants
+	i += putStringInUint(arr, simp, i); // value simple
     }
     pre.innerHTML = JSON.stringify(kvarr, null, 4);
     if (i >= arr.length)
