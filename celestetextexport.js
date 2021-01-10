@@ -24,29 +24,30 @@ function getvarlenrep (n) // little endian
     return arr;
 }
 
-var encoder = new TextEncoder();
-function getStringThing(len)
+function ulsb128 (n)
 {
-    // I have no idea what number format this is
-    // It's not MIDI-style variable length
-    // If you know, please tell
-    if (len < 128)
+    const len = Math.ceil(Math.log2(n + 1) / 7);
+    var result = new Uint8Array(len);
+    for (var i = 0; i < len; i++)
     {
-	return new Uint8Array([len]);
+	var byte = n & 127;
+	n >>= 7;
+	result[i] = byte;
     }
-    else
+    for (var i = 0; i < len - 1; i++)
     {
-	var byte0 = len & 255;
-	var byte1 = len >> 7;
-	byte1 &= 254 | (byte0 >> 7);
-	byte0 |= 128;
-	return new Uint8Array([byte0, byte1]);
+	result[i] |= 128;
     }
+    return result;
 }
+
+var encoder = new TextEncoder();
 function putStringInUint (arr, string, i)
 {
+    if (!string)
+	return 1; // the number byte for the string length would be 00, the string would have 0 length, it's just 00, so just tell the other part of this file to skip over that byte which is already 00
     var u8arr = encoder.encode(string);
-    var n = getStringThing (u8arr.length);
+    var n = ulsb128(u8arr.length);
     for (var j = 0; j < n.length; j++)
 	arr[i++] = n[j];
     for (var j = 0; j < u8arr.length; j++)
