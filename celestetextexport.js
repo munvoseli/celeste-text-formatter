@@ -14,32 +14,30 @@ function getvarlenrep (n) // little endian
 {
     const len = Math.ceil(Math.log2(n + 1) / 7);
     var arr = new Uint8Array(len);
-    arr[0] = n & 127;
-    n >>= 7;
-    for (var i = 1; i < len; i++)
+    for (var i = 0; i < len; i++)
     {
 	var a  = n & 127;
 	arr[i] = a | 128;
 	n >>= 7;
     }
+    arr[arr.length - 1] &= 127;
     return arr;
 }
 
 var encoder = new TextEncoder();
-function getStringThing(str)
+function getStringThing(len)
 {
     // I have no idea what number format this is
     // It's not MIDI-style variable length
     // If you know, please tell
-    var n = encoder.encode(str).length;
-    if (n < 128)
+    if (len < 128)
     {
-	return new Uint8Array([n]);
+	return new Uint8Array([len]);
     }
     else
     {
-	var byte0 = n & 255;
-	var byte1 = n >> 7;
+	var byte0 = len & 255;
+	var byte1 = len >> 7;
 	byte1 &= 254 | (byte0 >> 7);
 	byte0 |= 128;
 	return new Uint8Array([byte0, byte1]);
@@ -47,10 +45,10 @@ function getStringThing(str)
 }
 function putStringInUint (arr, string, i)
 {
-    var n = getStringThing (string);
+    var u8arr = encoder.encode(string);
+    var n = getStringThing (u8arr.length);
     for (var j = 0; j < n.length; j++)
 	arr[i++] = n[j];
-    var u8arr = encoder.encode(string);
     for (var j = 0; j < u8arr.length; j++)
 	arr[i++] = u8arr[j];
     return n.length + u8arr.length;
